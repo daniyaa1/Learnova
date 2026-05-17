@@ -49,7 +49,7 @@ export const getErrorMessage = (errorCode) => {
     case "auth/email-already-in-use":
       return "An account with this email already exists.";
     case "auth/weak-password":
-      return PASSWORD_REQUIREMENTS_MESSAGE;
+      return "Password must be 8+ chars with upper, lower, number, and special character.";
     case "auth/invalid-email":
       return "Please enter a valid email address.";
     case "auth/too-many-requests":
@@ -122,9 +122,11 @@ export const validateForm = (formData, isLogin) => {
   if (!password) {
     errors.password = "Password is required";
   } else if (!isLogin) {
-    const passwordError = validatePasswordStrength(password);
-    if (passwordError) {
-      errors.password = passwordError;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      errors.password =
+        "Password must be 8+ characters and include upper, lower, number, and special character (e.g. Test@123)";
     }
   }
 

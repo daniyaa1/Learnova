@@ -201,26 +201,10 @@ export default function AuthForm({
             {errors.password && (
               <p className="text-red-400 text-sm mt-1">{errors.password}</p>
             )}
-            {!isLogin && password.length > 0 && (
-              <div className="mt-3" aria-live="polite">
-                <div className="flex gap-1 mb-1.5">
-                  {[0, 1, 2, 3].map((segment) => (
-                    <div
-                      key={segment}
-                      className={`h-1.5 flex-1 rounded-full transition-colors ${
-                        segment < passwordStrength.score
-                          ? passwordStrength.barClass
-                          : "bg-gray-600"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p
-                  className={`text-xs font-medium ${passwordStrength.textClass}`}
-                >
-                  Password strength: {passwordStrength.label}
-                </p>
-              </div>
+            {!isLogin && !errors.password && (
+              <p className="text-gray-400 text-xs mt-1">
+                Min 8 characters with upper, lower, number, and special character.
+              </p>
             )}
           </div>
 
