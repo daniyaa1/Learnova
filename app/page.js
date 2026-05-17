@@ -405,10 +405,14 @@ export default function AboutPage() {
                   </p>
                 </div>
 
-                <ActionButton>
-                  Learn More
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                </ActionButton>
+                <div>
+                  <ActionButton>
+                    <Link href="/activity" className="inline-flex items-center w-full h-full">
+                      Learn More
+                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                    </Link>
+                  </ActionButton>
+                </div>
               </Reveal>
 
               <Reveal className="relative" delay={0.1}>
