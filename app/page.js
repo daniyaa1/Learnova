@@ -224,7 +224,7 @@ export default function AboutPage() {
     setScrollY(window.scrollY);
   }, []);
 
- const handleAnimationComplete = useCallback(() => {
+  const handleAnimationComplete = useCallback(() => {
   }, []);
 
   useEffect(() => {
@@ -415,10 +415,10 @@ export default function AboutPage() {
                   </p>
                 </div>
 
-                  <ActionButton href="/activity">
-                      Learn More
-                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                  </ActionButton>
+                <ActionButton href="/activity">
+                  Learn More
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                </ActionButton>
               </Reveal>
 
               <Reveal className="relative" delay={0.1}>
@@ -475,7 +475,7 @@ export default function AboutPage() {
               </p>
             </Reveal>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8 items-stretch">
               {VALUES_DATA.map((value, index) => (
          <Reveal key={value.title} delay={index * 0.08}>
              <Card className="group bg-white dark:bg-white/40 border-gray-200 dark:border-white/10 backdrop-blur-xl hover:border-accent/50 transition-all duration-700 hover:scale-[1.02]">    
@@ -630,7 +630,7 @@ export default function AboutPage() {
               </p>
             </Reveal>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
               {IMPACT_DATA.map((impact, index) => (
                 <Reveal key={impact.title} delay={index * 0.08}>
                   <div className="group bg-card backdrop-blur-xl rounded-3xl p-8 border border-border hover:border-accent/40 transition-all duration-700 hover:scale-[1.02] hover:shadow-2xl hover:shadow-accent/25 text-center">

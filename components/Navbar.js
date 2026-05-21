@@ -104,22 +104,24 @@ useEffect(() => {
     };
   }, [handleClickOutside]);
 
-  // ESC Key Support
+  // ESC Key Support — also listens to the global learnova:escape custom event
   useEffect(() => {
+    const close = () => {
+      setIsDropdownOpen(false);
+      setIsNotificationOpen(false);
+      setIsMenuOpen(false);
+    };
     const handleEscape = (event) => {
-      if (event.key === "Escape") {
-        setIsDropdownOpen(false);
-        setIsNotificationOpen(false);
-      }
+      if (event.key === "Escape") close();
     };
 
     window.addEventListener("keydown", handleEscape);
+    window.addEventListener("learnova:escape", close);
 
-    return () =>
-      window.removeEventListener(
-        "keydown",
-        handleEscape
-      );
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+      window.removeEventListener("learnova:escape", close);
+    };
   }, []);
 
   // Prevent body scroll
@@ -337,7 +339,7 @@ useEffect(() => {
                 );
               })}
 
-              { true ? (
+              { isAuthenticated ? (
                 <div className="flex items-center space-x-2 md:space-x-4 ml-2 md:ml-6">
                  <button
                   onClick={() =>
@@ -403,6 +405,7 @@ useEffect(() => {
                               onClick={
                                 markAllAsRead
                               }
+                              aria-label="Mark all notifications as read"
                               className="text-xs text-accent"
                             >
                               Mark all as read
@@ -412,7 +415,7 @@ useEffect(() => {
 
                         <div className="max-h-72 overflow-y-auto">
                           {notifications.map((n) => (
-                            <div
+                            <button
                               key={n.id}
                               onClick={() =>
                                 markAsRead(n.id)
@@ -430,7 +433,7 @@ useEffect(() => {
                               <p className="text-xs text-foreground/40 mt-1">
                                 {n.time}
                               </p>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -597,6 +600,7 @@ useEffect(() => {
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label="Close menu"
                 onClick={() =>
                   setIsMenuOpen(false)
                 }
