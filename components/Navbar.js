@@ -34,10 +34,8 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  
-const [notifications, setNotifications] = useState([]);
-
-const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const { user, userProfile, signOut, isAuthenticated } =
     useAuthContext();
@@ -47,9 +45,9 @@ const [unreadCount, setUnreadCount] = useState(0);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-useEffect(() => {
-  setMounted(true);
-}, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const scrollProgressValue = Number.isFinite(scrollProgress)
     ? scrollProgress
@@ -144,6 +142,30 @@ useEffect(() => {
     setIsMenuOpen(false);
 
     await signOut();
+  };
+
+  // Mock handler for testing notifications in dev mode
+  const handleTestNotification = () => {
+    const newNotif = {
+      id: Date.now(),
+      message: "Test Notification Fired Successfully! 🔔",
+      time: "Just now",
+      read: false,
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+    setUnreadCount((prev) => prev + 1);
+  };
+
+  const markAsRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
   };
 
   // Helpers
@@ -251,9 +273,7 @@ useEffect(() => {
   );
 
   const handleImageError = (e) => {
-
     const img = e.target;
-
     const fallback =
       img.parentElement?.querySelector(
         ".fallback-avatar"
@@ -277,17 +297,17 @@ useEffect(() => {
       <nav
         className="fixed w-full top-0 left-0 right-0 z-[70] transition-all duration-300 ease-out"
         style={{
-         backgroundColor:
-         !mounted ? "rgba(255, 255, 255, 0.95)" : theme === "dark"
-         ? `rgba(0,0,0,${0.82 + scrollProgressValue * 0.12})`
-          : `rgba(255,255,255,${0.98})`,
-         backdropFilter: `blur(20px)`,
-         WebkitBackdropFilter: `blur(20px)`,
-        borderBottom:
-        !mounted ? "1px solid rgba(0, 0, 0, 0.08)" : theme === "dark"
-      ? `1px solid rgba(255,255,255,0.1)`
-      : `1px solid rgba(0,0,0,0.08)`,
-}}
+          backgroundColor:
+            !mounted ? "rgba(255, 255, 255, 0.95)" : theme === "dark"
+              ? `rgba(0,0,0,${0.82 + scrollProgressValue * 0.12})`
+              : `rgba(255,255,255,${0.98})`,
+          backdropFilter: `blur(20px)`,
+          WebkitBackdropFilter: `blur(20px)`,
+          borderBottom:
+            !mounted ? "1px solid rgba(0, 0, 0, 0.08)" : theme === "dark"
+              ? `1px solid rgba(255,255,255,0.1)`
+              : `1px solid rgba(0,0,0,0.08)`,
+        }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex justify-between items-center h-16">
@@ -314,7 +334,7 @@ useEffect(() => {
 
             {/* Desktop Nav */}
             <div className="hidden sm:flex items-center space-x-2">
-        
+
               {navigationItems.map((item) => {
                 const isActive =
                   pathname === item.href;
@@ -346,9 +366,9 @@ useEffect(() => {
                   )}
                 </button>
               )}
-              { isAuthenticated ? (
+              {isAuthenticated ? (
                 <div className="flex items-center space-x-2 sm:space-x-4 ml-2 sm:ml-6">
-                
+
                   <Button asChild className="hidden sm:block relative bg-gradient-to-r from-accent to-blue-500 hover:from-accent/90 hover:to-blue-600 text-white font-medium shadow-lg hover:shadow-2xl hover:shadow-accent/30 transition-all duration-300 hover:scale-105 group overflow-hidden">
                     <Link href="/attendance">
                       <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -368,6 +388,17 @@ useEffect(() => {
                     </Link>
                   </Button>
 
+                  {/* 🛠️ FIXED: PRODUCTION-SAFE ENVIRONMENT CONDITIONAL FOR TESTING DEBUG BUTTON */}
+                  {process.env.NODE_ENV === "development" && (
+                    <Button 
+                      onClick={handleTestNotification} 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-dashed border-yellow-500 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10 transition-all"
+                    >
+                      Test Notification
+                    </Button>
+                  )}
 
                   {/* Notifications */}
                   <div className="relative">
@@ -407,34 +438,34 @@ useEffect(() => {
                             </button>
                           )}
                         </div>
-<div className="max-h-72 overflow-y-auto">
-  {notifications.length === 0 ? (
-    <div className="p-6 text-center">
-      <Bell className="h-10 w-10 mx-auto text-white/30 mb-3" />
-      <p className="text-white/50 text-sm">
-        No notifications available
-      </p>
-    </div>
-  ) : (
-    notifications.map((n) => (
-      <div
-        key={n.id}
-        onClick={() => markAsRead(n.id)}
-        className={`p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 ${
-          !n.read ? "bg-accent/5" : ""
-        }`}
-      >
-        <p className="text-sm text-white">
-          {n.message}
-        </p>
+                        <div className="max-h-72 overflow-y-auto">
+                          {notifications.length === 0 ? (
+                            <div className="p-6 text-center">
+                              <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+                              <p className="text-muted-foreground/50 text-sm">
+                                No notifications available
+                              </p>
+                            </div>
+                          ) : (
+                            notifications.map((n) => (
+                              <div
+                                key={n.id}
+                                onClick={() => markAsRead(n.id)}
+                                className={`p-4 border-b border-border cursor-pointer hover:bg-accent/5 ${
+                                  !n.read ? "bg-accent/5" : ""
+                                }`}
+                              >
+                                <p className="text-sm text-foreground">
+                                  {n.message}
+                                </p>
 
-        <p className="text-xs text-white/40 mt-1">
-          {n.time}
-        </p>
-      </div>
-    ))
-  )}
-</div>
+                                <p className="text-xs text-muted-foreground/40 mt-1">
+                                  {n.time}
+                                </p>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -652,7 +683,7 @@ useEffect(() => {
               </div>
             )}
 
-            {/* Navigation Menu - FIXED: Removed inline animation delay styles */}
+            {/* Navigation Menu */}
             <div className="flex-1 overflow-y-auto py-4">
               <div className="px-4 space-y-2">
                 {/* Main Navigation */}
