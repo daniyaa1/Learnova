@@ -235,6 +235,36 @@ export default function AuthForm({
                 Min 8 characters with upper, lower, number, and special character.
               </p>
             )}
+            {!isLogin && (
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400 font-medium">Password Strength</span>
+                  <span
+                    data-testid="password-strength-label"
+                    className={`font-semibold transition-colors duration-300 ${
+                      password.length > 0 ? passwordStrength.textClass : "text-gray-500"
+                    }`}
+                  >
+                    {password.length > 0 ? passwordStrength.label : "None"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5 h-1.5 w-full bg-gray-700/30 rounded-full overflow-hidden">
+                  {[0, 1, 2, 3].map((index) => {
+                    const activeSegments = password.length > 0 ? Math.min(passwordStrength.score + 1, 4) : 0;
+                    const isFilled = index < activeSegments;
+                    return (
+                      <div
+                        key={index}
+                        data-testid={`password-strength-bar-${index}`}
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${
+                          isFilled ? passwordStrength.barClass : "bg-gray-700/50"
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {isLogin && (
