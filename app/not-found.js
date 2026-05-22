@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Home } from "lucide-react";
+import { Home, ArrowLeft } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import DarkVeil from "@/components/ui-block/DarkVeil";
 
 const PARTICLES_DATA = [
@@ -15,34 +16,44 @@ const PARTICLES_DATA = [
 ];
 
 export default function NotFound() {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = useCallback((event) => {
-    setMousePosition({ x: event.clientX, y: event.clientY });
+    setMousePosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     setMousePosition({
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
     });
 
-    let mouseTimeout;
+    let timeout;
+
     const throttledMouseMove = (event) => {
-      if (!mouseTimeout) {
-        mouseTimeout = setTimeout(() => {
+      if (!timeout) {
+        timeout = setTimeout(() => {
           handleMouseMove(event);
-          mouseTimeout = null;
+          timeout = null;
         }, 32);
       }
     };
 
-    window.addEventListener("mousemove", throttledMouseMove, { passive: true });
+    window.addEventListener("mousemove", throttledMouseMove, {
+      passive: true,
+    });
 
     return () => {
       window.removeEventListener("mousemove", throttledMouseMove);
-      if (mouseTimeout) clearTimeout(mouseTimeout);
+      if (timeout) clearTimeout(timeout);
     };
   }, [handleMouseMove]);
 
@@ -52,19 +63,22 @@ export default function NotFound() {
       top: mousePosition.y - 192,
       transition: "all 1.2s ease-out",
     }),
-    [mousePosition.x, mousePosition.y]
+    [mousePosition]
   );
 
   return (
     <>
       <Navbar />
-      <div className="fixed inset-0 -z-10 bg-slate-950">
+
+      <div className="fixed inset-0 -z-10">
         <DarkVeil />
+
         <div
           className="absolute h-96 w-96 rounded-full bg-gradient-to-r from-purple-600/20 to-blue-600/20 blur-3xl pointer-events-none"
           style={mouseOrbStyle}
         />
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+
+        <div className="absolute inset-0 overflow-hidden">
           {PARTICLES_DATA.map((particle) => (
             <div
               key={particle.id}
@@ -80,37 +94,68 @@ export default function NotFound() {
         </div>
       </div>
 
-      <main className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 py-24 text-center">
-        <div className="w-full max-w-2xl bg-slate-900/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 sm:p-12 md:p-16 shadow-2xl shadow-purple-500/5 space-y-8 transition-all duration-500 hover:border-purple-500/20">
-          <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-purple-400">
-                404 - Page Not Found
-              </span>
-            </h1>
-            <p className="text-slate-400 font-medium text-base sm:text-lg md:text-xl max-w-md mx-auto leading-relaxed">
-              The page you're looking for doesn't exist or may have moved. Check the URL or head back to the homepage.
-            </p>
+      <main className="relative z-10 flex min-h-screen items-center justify-center px-6 py-24 text-center text-white">
+        <div className="w-full max-w-2xl space-y-8">
+          <div className="inline-flex rounded-full border border-red-500/20 bg-red-500/10 px-4 py-1 text-sm text-red-400">
+            Error 404
           </div>
 
-          <div className="flex items-center justify-center">
+          <h1 className="animate-pulse text-7xl sm:text-8xl md:text-9xl font-extrabold tracking-tight">
+            404
+          </h1>
+
+          <h2 className="text-3xl font-bold">
+            Page Not Found
+          </h2>
+
+          <p className="text-lg text-slate-300">
+            Oops! The page you're trying to access doesn't exist,
+            may have been moved, or the URL might be incorrect.
+          </p>
+
+          <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-400 backdrop-blur-sm">
+            Requested path:{" "}
+            <span className="font-mono text-white">
+              {pathname}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-indigo-600/25 transition-all duration-300 hover:scale-105 hover:shadow-indigo-600/40 hover:brightness-110 active:scale-95"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-accent to-purple-500 px-8 py-4 text-sm font-semibold text-white shadow-xl shadow-accent/25 transition-all duration-300 hover:scale-105"
             >
-              <Home className="h-5 w-5" />
-              Go back home
+              <Home className="h-4 w-4" />
+              Go Home
             </Link>
+
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Go Back
+            </button>
           </div>
         </div>
       </main>
 
       <style jsx>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
-          50% { transform: translateY(-20px) rotate(90deg); opacity: 0.8; }
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+            opacity: 0.3;
+          }
+          50% {
+            transform: translateY(-15px) rotate(90deg);
+            opacity: 0.8;
+          }
         }
-        .animate-float { animation: float ease-in-out infinite; }
+
+        .animate-float {
+          animation: float ease-in-out infinite;
+        }
       `}</style>
     </>
   );
