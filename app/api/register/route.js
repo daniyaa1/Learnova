@@ -41,12 +41,9 @@ export async function POST(req) {
     const authResult = await verifyFirebaseToken(token);
 
     if (!authResult.valid) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized",
-          reason: authResult.reason,
-        },
-        { status: 401 }
+      return jsonError(
+        { message: "Unauthorized", reason: authResult.reason },
+        401
       );
     }
 
@@ -60,6 +57,14 @@ export async function POST(req) {
 
     if (!name || !rollNo || !email || !file) {
       return jsonError("Name, rollNo, email, and photo are required", 400);
+    }
+
+    if (!EMAIL_PATTERN.test(email)) {
+      const suggestion = suggestEmailCorrection(email);
+      const errorMessage = suggestion 
+        ? `Invalid email format. Did you mean ${suggestion}?` 
+        : "Invalid email format.";
+      return jsonError(errorMessage, 400);
     }
 
     // 2. Prevent arbitrary registrations - Must register own email
