@@ -16,6 +16,7 @@ import PageTransition from "@/components/PageTransition";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackToTop from "@/components/BackToTop";
 import CursorGlow from "@/components/CursorGlow";
+import OfflineIndicator from "@/components/OfflineIndicator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -265,6 +266,7 @@ export default function RootLayout({ children }) {
                     style: { fontWeight: 600 },
                   }}
                 />
+                <OfflineIndicator />
               </Suspense>
             </NotificationProvider>
           </AuthProvider>
