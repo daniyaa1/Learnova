@@ -499,7 +499,7 @@ export function Navbar() {
                       {getUserPhoto() && (
                         <Image
                           src={getUserPhoto()}
-                          alt="Profile"
+                          alt="User profile avatar"
                           width={56}
                           height={56}
                           className="rounded-full border-2 border-accent/50 object-cover shadow-lg"
