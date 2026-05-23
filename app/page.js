@@ -149,21 +149,22 @@ const IMPACT_DATA = [
   },
 ];
 
-// Reusable components
+// ✅ UPDATED FIXED COMPONENT
 const SectionBadge = ({
   icon: Icon,
   text,
   gradient = "from-purple-500/20 to-pink-500/20",
-  borderColor = "purple-500/30",
+  borderClass = "border-purple-500/30", // 1. Pass the full class name string here
   textColor = "purple-300",
 }) => (
   <div
-    className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${gradient} rounded-full border border-${borderColor} backdrop-blur-sm mb-6`}
+    className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${gradient} rounded-full border ${borderClass} backdrop-blur-sm mb-6`} // 2. Drop the template literal concatenation
   >
     <Icon className={`w-5 h-5 text-${textColor.split("-")[0]}-400 mr-2`} />
     <span className={`text-${textColor} font-medium`}>{text}</span>
   </div>
 );
+
 
 const Reveal = ({ children, className = "", delay = 0, y = 28 }) => (
   <motion.div
@@ -377,6 +378,14 @@ export default function AboutPage() {
             </h1>
           </div>
         </section>
+        <div className="mt-8 flex justify-center">
+  <a
+    href="#mission"
+    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-all duration-300"
+  >
+    Explore More ↓
+  </a>
+</div>
 
         {/* Mission Section */}
         <section
@@ -465,6 +474,7 @@ export default function AboutPage() {
                 borderColor="accent/30"
                 textColor="accent"
               />
+              
 
               <h2 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
                 Core Principles That Drive Us
@@ -477,21 +487,21 @@ export default function AboutPage() {
 
             <div className="grid md:grid-cols-3 gap-8 items-stretch">
               {VALUES_DATA.map((value, index) => (
-         <Reveal key={value.title} delay={index * 0.08}>
-             <Card className="group bg-white dark:bg-white/40 border-gray-200 dark:border-white/10 backdrop-blur-xl hover:border-accent/50 transition-all duration-700 hover:scale-[1.02]">    
-                  <CardHeader className="text-center pb-4">
+                <Reveal key={value.title} delay={index * 0.08}>
+                  <Card className="group bg-white dark:bg-black/40 border-gray-200 dark:border-white/10 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-accent/10 hover:border-accent/50 transition-all duration-700 hover:scale-[1.02]">
+                    <CardHeader className="text-center pb-4">
                       <div
                         className={`mx-auto w-20 h-20 bg-gradient-to-br ${value.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-500 relative overflow-hidden`}
                       >
-                        <value.icon className="h-10 w-10 text-black dark:text-black dark:text-white relative z-10" />
+                        <value.icon className="h-10 w-10 text-white relative z-10" />
                         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       </div>
-                      <CardTitle className="text-black dark:text-black dark:text-white text-xl group-hover:text-accent transition-colors duration-500">
+                      <CardTitle className="text-gray-950 dark:text-white text-xl group-hover:text-gray-950 dark:group-hover:text-accent transition-colors duration-500">
                         {value.title}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <CardDescription className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors duration-500">
+                      <CardDescription className="text-gray-600 dark:text-gray-300 leading-relaxed group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors duration-500">
                         {value.description}
                       </CardDescription>
                     </CardContent>
@@ -526,13 +536,13 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-3 gap-8">
               {TEAM_MEMBERS.map((member, index) => (
                 <Reveal key={member.name} delay={index * 0.08}>
-                  <Card className="group bg-white dark:bg-white/70 dark:bg-black/40 border-gray-200 dark:border-white/10 backdrop-blur-xl hover:border-accent/50 transition-all duration-700 hover:scale-[1.02]">
+                  <Card className="group bg-white dark:bg-black/40 border-gray-200 dark:border-white/10 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-accent/10 hover:border-accent/50 transition-all duration-700 hover:scale-[1.02]">
                     <CardContent className="pt-8 text-center">
                       <div className="relative mb-6">
                         <div
                           className={`w-28 h-28 bg-gradient-to-br ${member.color} rounded-full flex items-center justify-center mx-auto group-hover:scale-105 transition-transform duration-500 relative overflow-hidden`}
                         >
-                          <span className="text-3xl font-bold text-black dark:text-white relative z-10">
+                          <span className="text-3xl font-bold text-white relative z-10">
                             {member.initials}
                           </span>
                           <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -543,13 +553,13 @@ export default function AboutPage() {
                         </div>
                       </div>
 
-                      <h3 className="text-2xl font-semibold text-black dark:text-white mb-2 group-hover:text-accent transition-colors duration-500">
+                      <h3 className="text-2xl font-semibold text-gray-950 dark:text-white mb-2 group-hover:text-gray-950 dark:group-hover:text-accent transition-colors duration-500">
                         {member.name}
                       </h3>
                       <p className="text-accent font-medium mb-4 text-lg">
                         {member.role}
                       </p>
-                      <p className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors duration-500">
+                      <p className="text-gray-600 dark:text-gray-300 leading-relaxed group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors duration-500">
                         {member.description}
                       </p>
                     </CardContent>
@@ -633,7 +643,7 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
               {IMPACT_DATA.map((impact, index) => (
                 <Reveal key={impact.title} delay={index * 0.08}>
-                  <div className="group bg-card backdrop-blur-xl rounded-3xl p-8 border border-border hover:border-accent/40 transition-all duration-700 hover:scale-[1.02] hover:shadow-2xl hover:shadow-accent/25 text-center">
+                  <div className="bg-black rounded-3xl p-8 flex flex-col justify-center items-center text-center h-full min-h-[260px] border border-white/10">
                     <impact.icon className="w-12 h-12 text-accent mx-auto mb-6 group-hover:scale-110 transition-transform duration-500" />
                     <h3 className="text-xl font-semibold text-black dark:text-white mb-3 group-hover:text-accent transition-colors duration-500">
                       {impact.title}
@@ -662,7 +672,7 @@ export default function AboutPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <ActionButton href="/auth">
+                <ActionButton href="/auth?mode=signup">
                   Get Started Today
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </ActionButton>

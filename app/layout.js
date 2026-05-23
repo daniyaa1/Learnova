@@ -8,12 +8,14 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import ErrorBoundary from "@/components/ErrorBoundary"; // Imported ErrorBoundary
 import LearnovaChatbot from "@/components/ChatBot";
 import ClientLayout from "@/components/ClientLayout";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackToTop from "@/components/BackToTop";
+import OfflineIndicator from "@/components/OfflineIndicator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -231,38 +233,43 @@ export default function RootLayout({ children }) {
         {/* Canonical and sitemap */}
         <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
       </head>
-     <body
-  className={`font-sans ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen transition-colors duration-300`}
->
-  <ThemeProvider>
-    <AuthProvider>
-      <NotificationProvider>
-        <Suspense fallback={null}>
-          <PageTransition>{children}</PageTransition>
+      <body
+        className={`font-sans ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen transition-colors duration-300`}
+      >
+          {/* Cursor glow removed per UX preference */}
+          
+        <ThemeProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <Suspense fallback={null}>
+                <PageTransition>{children}</PageTransition>
 
-          <ScrollToTop />
+                <ScrollToTop />
 
-          {/* Chatbot injected globally */}
-          <div className="z-50">
-            <LearnovaChatbot />
-          </div>
+                {/* Chatbot safely isolated inside ErrorBoundary */}
+                <div className="z-50">
+                  <ErrorBoundary>
+                    <LearnovaChatbot />
+                  </ErrorBoundary>
+                </div>
 
-          <Footer />
-          <ClientLayout />
-          <BackToTop />
+                <Footer />
+                <ClientLayout />
+                <BackToTop />
 
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: { fontWeight: 600 },
-            }}
-          />
-        </Suspense>
-      </NotificationProvider>
-    </AuthProvider>
-  </ThemeProvider>
-</body>
-</html>
-);
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: { fontWeight: 600 },
+                  }}
+                />
+                <OfflineIndicator />
+              </Suspense>
+            </NotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
 }
