@@ -138,9 +138,7 @@ export async function middleware(request) {
           const res = await fetch(
             `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${payload.sub}`,
             {
-              headers: { Authorization: `Bearer ${authToken}` },
-              cache: "force-cache",
-              next: { revalidate: 300 } // Cache securely at the edge for 5 minutes
+              headers: { Authorization: `Bearer ${authToken}` }
             }
           );
           if (res.ok) {
