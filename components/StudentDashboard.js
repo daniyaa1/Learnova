@@ -45,6 +45,7 @@ import AttendanceAnalytics from "./dashboard/AttendanceAnalytics";
 import StreakCounter from "./gamification/StreakCounter";
 import XpProgressBar from "./gamification/XpProgressBar";
 import BadgeGallery from "./gamification/BadgeGallery";
+import ComplaintForm from "@/components/ComplaintForm";
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -58,6 +59,7 @@ const StudentDashboard = () => {
   const [isAttendanceWindow, setIsAttendanceWindow] = useState(false);
   const [gamificationData, setGamificationData] = useState(null);
 
+  const [showComplaint, setShowComplaint] = useState(false);
   useEffect(() => {
     const fetchGamification = async () => {
       try {
@@ -261,6 +263,11 @@ const StudentDashboard = () => {
                   <Download className="w-3 h-3" />
                   Export Data
                 </button>
+                <button
+                  onClick={() => setShowComplaint(true)}
+                  className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs transition-colors">
+                  Raise Complaint
+                </button>
               </div>
 
               <div className="flex items-center gap-2">
@@ -277,6 +284,34 @@ const StudentDashboard = () => {
 
       {/* Main */}
       <div className="relative z-10 container mx-auto px-4 py-8 space-y-8">
+        
+              {/* Gamification Section */}
+              {gamificationData && (
+                <div className="flex flex-col lg:flex-row gap-6 mb-4">
+                  <div className="flex flex-col gap-6 flex-1">
+                    <div className="flex gap-4 items-center">
+                      <StreakCounter currentStreak={gamificationData.currentStreak} />
+                      <div className="flex-1">
+                        <XpProgressBar 
+                          currentLevel={gamificationData.currentLevel} 
+                          currentXp={gamificationData.totalXp} 
+                        />
+                      </div>
+                    </div>
+                    <BadgeGallery unlockedBadges={gamificationData.unlockedBadges} />
+                  </div>
+                </div>
+              )}
+
+              {user && user.uid && (
+                <AttendanceAnalytics
+                  userId={user.uid}
+                  recentActivity={recentActivity}
+                />
+              )}
+             
+      
+   
         {/* Attendance Window */}
         {isAttendanceWindow && upcomingClass && (
           <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl">
@@ -626,12 +661,38 @@ const StudentDashboard = () => {
                   <span className="text-blue-400 text-sm">
                     +91 ***-***-1234
                   </span>
+                  
                 </div>
               </div>
             </div>
           </div>
         </div>
+        {/* Complaint Modal */}
+          {showComplaint && (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-gray-900 p-6 rounded-xl w-full max-w-lg border border-white/10">
+                
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold text-white">
+                    Submit Complaint
+                  </h2>
+
+                  <button
+                    onClick={() => setShowComplaint(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <ComplaintForm onSuccess={() => setShowComplaint(false)} />
+              </div>
+            </div>
+          )}
+        
       </div>
+      
+      
 
       {/* Animations */}
       <style jsx>{`
@@ -660,45 +721,16 @@ const StudentDashboard = () => {
 
 const StatCard = ({ color, label, value }) => {
   const styles = {
-    green:
-      "from-green-500/20 to-green-600/20 border-green-500/30 text-green-400 text-green-300",
-    red:
-      "from-red-500/20 to-red-600/20 border-red-500/30 text-red-400 text-red-300",
-    yellow:
-      "from-yellow-500/20 to-yellow-600/20 border-yellow-500/30 text-yellow-400 text-yellow-300",
-    blue:
-      "from-blue-500/20 to-blue-600/20 border-blue-500/30 text-blue-400 text-blue-300",
+    green: "from-green-500/20 to-green-600/20 border-green-500/30 text-green-400",
+    red: "from-red-500/20 to-red-600/20 border-red-500/30 text-red-400",
+    yellow: "from-yellow-500/20 to-yellow-600/20 border-yellow-500/30 text-yellow-400",
+    blue: "from-blue-500/20 to-blue-600/20 border-blue-500/30 text-blue-400",
   };
 
-  const style = styles[color].split(" ");
-
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-7xl mx-auto min-h-screen">
-      {/* Gamification Section */}
-      {gamificationData && (
-        <div className="flex flex-col lg:flex-row gap-6 mb-4">
-          <div className="flex flex-col gap-6 flex-1">
-            <div className="flex gap-4 items-center">
-              <StreakCounter currentStreak={gamificationData.currentStreak} />
-              <div className="flex-1">
-                <XpProgressBar 
-                  currentLevel={gamificationData.currentLevel} 
-                  currentXp={gamificationData.totalXp} 
-                />
-              </div>
-            </div>
-            <BadgeGallery unlockedBadges={gamificationData.unlockedBadges} />
-          </div>
-        </div>
-      )}
-
-      {user && user.uid && (
-        <AttendanceAnalytics
-          userId={user.uid}
-          recentActivity={recentActivity}
-        />
-      )}
-      {/* KEEP YOUR ENTIRE EXISTING JSX HERE EXACTLY SAME */}
+    <div className={`bg-gradient-to-r ${styles[color]} border rounded-xl p-4`}>
+      <div className="text-sm">{label}</div>
+      <div className="text-xl font-bold">{value}</div>
     </div>
   );
 };

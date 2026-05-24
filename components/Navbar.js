@@ -164,6 +164,7 @@ export function Navbar() {
   const navigationItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/activity", label: "Activities", icon: Activity },
+    { href: "/complaints", label: "Complaints", icon: Mail },
     { href: "/contact", label: "Contact", icon: Mail },
   ];
 
