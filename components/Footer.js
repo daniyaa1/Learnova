@@ -13,6 +13,7 @@ export default function Footer() {
     { label: "Contact", href: "/contact" },
     { label: "Register", href: "/register" },
     { label: "Contributors", href: "/contributors" },
+    { label: "Terms & Conditions", href: "/terms" },
   ];
 
   const sectionLinks = [
@@ -24,10 +25,10 @@ export default function Footer() {
   ];
 
   return (
-        <footer className="relative overflow-hidden border-t border-border bg-background text-foreground transition-colors duration-300">      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-24 left-8 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
-      </div>
+    <footer className="relative overflow-hidden border-t border-border bg-background text-foreground transition-colors duration-300">      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+      <div className="absolute -top-24 left-8 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl" />
+      <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
+    </div>
 
       <div className="relative mx-auto max-w-7xl px-6 py-14">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -53,7 +54,7 @@ export default function Footer() {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
               Quick Links
             </h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-1 text-sm">
               {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link
