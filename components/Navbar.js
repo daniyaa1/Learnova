@@ -12,13 +12,22 @@ import {
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
-
-import { useNotifications } from "@/hooks/useNotifications";
+import NotificationBell from "@/components/NotificationBell";
 
 import { useTheme } from "next-themes";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 
+const languageMap = {
+  "English": "en",
+  "Español": "es",
+  "Français": "fr",
+  "Deutsch": "de",
+  "हिन्दी": "hi"
+};
 import {
   Menu,
   X,
@@ -31,58 +40,50 @@ import {
   Sparkles,
   Home,
   Mail,
-  Bell,
   UserCheck,
   Sun,
   Moon,
   Keyboard,
   Languages, // Added for the translation button icon
+  Search,
 } from "lucide-react";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false); // Language dropdown state
   const [currentLang, setCurrentLang] = useState("English"); // Tracks selected language
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mounted, setMounted] = useState(false);
-
-  const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-  } = useNotifications();
+  const { i18n } = useTranslation();
 
   const {
     user,
     userProfile,
     signOut,
     isAuthenticated,
+    loading,
   } = useAuthContext();
 
   const dropdownRef = useRef(null);
   const langRef = useRef(null); // Ref to track language dropdown outside clicks
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const [prefersDark, setPrefersDark] = useState(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const saved = localStorage.getItem("theme");
-      if (saved === "light") return false;
-      if (saved === "dark") return true;
-      return (
-        typeof window.matchMedia === "function" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      );
-    } catch (e) {
-      return null;
-    }
-  });
+  const [prefersDark, setPrefersDark] = useState(null);
 
   useEffect(() => {
     setMounted(true);
+    try {
+      const saved = localStorage.getItem("theme");
+      if (saved === "light") setPrefersDark(false);
+      else if (saved === "dark") setPrefersDark(true);
+      else {
+        setPrefersDark(
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        );
+      }
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
@@ -101,7 +102,6 @@ export function Navbar() {
       !dropdownRef.current.contains(event.target)
     ) {
       setIsDropdownOpen(false);
-      setIsNotificationOpen(false);
     }
     // Close language selector if clicking outside
     if (
@@ -121,7 +121,6 @@ export function Navbar() {
   useEffect(() => {
     const closeMenus = () => {
       setIsDropdownOpen(false);
-      setIsNotificationOpen(false);
       setIsMenuOpen(false);
       setIsLangOpen(false);
     };
@@ -148,7 +147,6 @@ export function Navbar() {
   useEffect(() => {
     setIsMenuOpen(false);
     setIsDropdownOpen(false);
-    setIsNotificationOpen(false);
     setIsLangOpen(false);
   }, [pathname]);
 
@@ -197,6 +195,7 @@ export function Navbar() {
     { href: "/", label: "Home", icon: Home },
     { href: "/productivity", label: "Focus", icon: Sparkles },
     { href: "/activity", label: "Activities", icon: Activity },
+    { href: "/complaints", label: "Complaints", icon: Mail },
     { href: "/contact", label: "Contact", icon: Mail },
   ];
 
@@ -222,6 +221,8 @@ export function Navbar() {
     ? scrollProgress
     : 0;
   
+  const isDark = (mounted ? resolvedTheme : prefersDark ? "dark" : "light") === "dark";
+  
   return (
     <>
       {/* Background Dimming Layer on Scroll */}
@@ -236,13 +237,13 @@ export function Navbar() {
         style={{
           // Use resolved theme when mounted; otherwise fall back to system preference
           backgroundColor:
-            (mounted ? resolvedTheme : prefersDark ? "dark" : "light") === "dark"
+            isDark
               ? `rgba(0,0,0,${0.82 + scrollProgressValue * 0.12})`
               : `rgba(255,255,255,0.98)`,
           backdropFilter: `blur(20px)`,
           WebkitBackdropFilter: `blur(20px)`,
           borderBottom:
-            (mounted ? resolvedTheme : prefersDark ? "dark" : "light") === "dark"
+            isDark
               ? `1px solid rgba(255,255,255,0.1)`
               : `1px solid rgba(0,0,0,0.08)`,
         }}
@@ -288,6 +289,17 @@ export function Navbar() {
             {/* Right Group Controls */}
             <div className="hidden sm:flex items-center space-x-3">
               
+              {/* Global Search Button */}
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("learnova:open-search"))}
+                className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors border border-zinc-200/40 dark:border-zinc-800/50 cursor-pointer"
+                aria-label="Open search modal"
+              >
+                <Search className="h-4 w-4 text-zinc-400" />
+                <span className="hidden md:inline">Search</span>
+                <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-400 text-[10px] rounded border border-zinc-200 dark:border-zinc-800 font-mono leading-none">Ctrl K</kbd>
+              </button>
+
               {/* Language Selector Dropdown */}
               <div className="relative" ref={langRef}>
                 <button
@@ -314,6 +326,9 @@ export function Navbar() {
                         onClick={() => {
                           setCurrentLang(lang);
                           setIsLangOpen(false);
+                          if (i18n && i18n.changeLanguage) {
+                            i18n.changeLanguage(languageMap[lang]);
+                          }
                         }}
                         className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                           currentLang === lang
@@ -330,53 +345,61 @@ export function Navbar() {
 
               {/* Theme Toggle */}
               {mounted && (
-                <button
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="p-2 rounded-xl text-gray-900 dark:text-gray-50 hover:text-gray-950 dark:hover:text-white hover:bg-accent/10 transition-all duration-300 cursor-pointer"
+                <motion.button
+                  onClick={() => setTheme(isDark ? "light" : "dark")}
+                  className={`relative w-14 h-8 flex items-center justify-between rounded-full p-1 border transition-all duration-300 cursor-pointer overflow-hidden ${
+                    isDark
+                      ? "bg-zinc-950 border-zinc-800/80 hover:shadow-[0_0_15px_rgba(234,179,8,0.15)]"
+                      : "bg-zinc-100 border-zinc-200/80 hover:shadow-[0_0_15px_rgba(79,70,229,0.15)]"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   aria-label="Toggle theme"
                 >
-                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </button>
+                  <Sun className={`h-3.5 w-3.5 ml-1 transition-colors duration-300 ${isDark ? "text-zinc-600" : "text-amber-500"}`} />
+                  <Moon className={`h-3.5 w-3.5 mr-1 transition-colors duration-300 ${isDark ? "text-violet-400" : "text-zinc-400"}`} />
+                  
+                  {/* Sliding handle */}
+                  <motion.div
+                    className={`absolute left-1 w-6 h-6 rounded-full shadow-md flex items-center justify-center border ${
+                      isDark
+                        ? "bg-zinc-900 border-zinc-800/50 text-violet-400"
+                        : "bg-white border-zinc-200/50 text-amber-500"
+                    }`}
+                    animate={{
+                      x: isDark ? 24 : 0,
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 380,
+                      damping: 24,
+                    }}
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.div
+                        key={isDark ? "dark" : "light"}
+                        initial={{ opacity: 0, rotate: -90, scale: 0.6 }}
+                        animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                        exit={{ opacity: 0, rotate: 90, scale: 0.6 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex items-center justify-center"
+                      >
+                        {isDark ? (
+                          <Moon className="h-3 w-3 fill-violet-500/20" />
+                        ) : (
+                          <Sun className="h-3 w-3 fill-yellow-500/20" />
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+                  </motion.div>
+                </motion.button>
               )}
 
-              {isAuthenticated ? (
+              {loading ? (
+                <div className="w-24 h-10 bg-zinc-200 dark:bg-zinc-800 animate-pulse rounded-xl" />
+              ) : isAuthenticated ? (
                 <div className="flex items-center space-x-3 pl-1 border-l border-zinc-200 dark:border-zinc-800">
-                  
-                  {/* Notifications Module Panel */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                      className="relative p-2 rounded-xl text-gray-900 dark:text-gray-50 hover:text-gray-950 dark:hover:text-white hover:bg-accent/10 transition-all duration-300 cursor-pointer"
-                      aria-label="View notifications"
-                    >
-                      <Bell className="h-5 w-5" />
-                      {unreadCount > 0 && <span className="absolute top-2 right-2 bg-red-500 rounded-full h-2 w-2" />}
-                    </button>
-
-                    {isNotificationOpen && (
-                      <div className="absolute right-0 mt-3 w-72 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl z-[80] overflow-hidden">
-                        <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900/50">
-                          <h3 className="text-zinc-900 dark:text-zinc-100 font-bold text-sm">Notifications</h3>
-                          {unreadCount > 0 && (
-                            <button onClick={markAllAsRead} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
-                              Mark all as read
-                            </button>
-                          )}
-                        </div>
-                        <div className="max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-900">
-                          {notifications.length === 0 ? (
-                            <div className="p-4 text-center text-sm text-zinc-400">No new notices</div>
-                          ) : (
-                            notifications.map((n) => (
-                              <div key={n.id} onClick={() => markAsRead(n.id)} className={`p-3 text-left cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/40 ${!n.read ? "bg-blue-50/30" : ""}`}>
-                                <p className="text-sm text-zinc-800 dark:text-zinc-200 line-clamp-2">{n.message}</p>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <NotificationBell />
 
                   {/* Profile Dropdown */}
                   <div className="relative" ref={dropdownRef}>
@@ -459,19 +482,24 @@ export function Navbar() {
             </div>
             
             {isAuthenticated && (
-              <div className="flex items-center space-x-3 p-2 bg-zinc-50 dark:bg-zinc-900/40 rounded-xl border border-zinc-100 dark:border-zinc-800/50">
-                <div className="relative w-10 h-10 shrink-0">
-                  {getUserPhoto() ? (
-                    <Image src={getUserPhoto()} alt="Profile" width={40} height={40} className="rounded-full object-cover" onError={handleImageError} />
-                  ) : (
-                    <div className="absolute inset-0 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                      {getUserInitials(getUserDisplayName())}
-                    </div>
-                  )}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 p-2 bg-zinc-50 dark:bg-zinc-900/40 rounded-xl border border-zinc-100 dark:border-zinc-800/50">
+                  <div className="relative w-10 h-10 shrink-0">
+                    {getUserPhoto() ? (
+                      <Image src={getUserPhoto()} alt="Profile" width={40} height={40} className="rounded-full object-cover" onError={handleImageError} />
+                    ) : (
+                      <div className="absolute inset-0 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                        {getUserInitials(getUserDisplayName())}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-50 truncate">{getUserDisplayName()}</h4>
+                    <p className="text-[11px] text-zinc-400 truncate">{getUserRole()}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-50 truncate">{getUserDisplayName()}</h4>
-                  <p className="text-[11px] text-zinc-400 truncate">{getUserRole()}</p>
+                <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/40 px-3 py-2">
+                  <NotificationBell />
                 </div>
               </div>
             )}
@@ -494,9 +522,12 @@ export function Navbar() {
                   <button
                     key={lang}
                     onClick={() => {
-                      setCurrentLang(lang);
-                      setIsMenuOpen(false);
-                    }}
+                          setCurrentLang(lang);
+                          setIsMenuOpen(false);
+                          if (i18n && i18n.changeLanguage) {
+                            i18n.changeLanguage(languageMap[lang]);
+                          }
+                        }}
                     className={`text-xs p-2 rounded-xl border text-center transition-all ${
                       currentLang === lang
                         ? "bg-blue-600 text-white border-blue-600 font-bold"
@@ -506,6 +537,43 @@ export function Navbar() {
                     {lang}
                   </button>
                 ))}
+              </div>
+            </div>
+            {/* Mobile Theme Selector */}
+            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900">
+              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2 px-1">Theme</span>
+              <div className="flex items-center justify-between p-1 bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200/40 dark:border-zinc-800/50 rounded-xl relative overflow-hidden">
+                <button
+                  onClick={() => setTheme("light")}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-lg z-10 transition-colors relative cursor-pointer ${
+                    !isDark
+                      ? "text-indigo-600 dark:text-zinc-50"
+                      : "text-zinc-500 hover:text-zinc-950 dark:hover:text-zinc-50"
+                  }`}
+                >
+                  <Sun className="h-3.5 w-3.5" />
+                  <span>Light</span>
+                </button>
+                <button
+                  onClick={() => setTheme("dark")}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-lg z-10 transition-colors relative cursor-pointer ${
+                    isDark
+                      ? "text-yellow-500 dark:text-zinc-50"
+                      : "text-zinc-500 hover:text-zinc-950 dark:hover:text-zinc-50"
+                  }`}
+                >
+                  <Moon className="h-3.5 w-3.5" />
+                  <span>Dark</span>
+                </button>
+                
+                {/* Slidable background track */}
+                <motion.div
+                  className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white dark:bg-zinc-800 rounded-lg shadow-sm"
+                  animate={{
+                    x: isDark ? "100%" : "0%"
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                />
               </div>
             </div>
 
@@ -523,7 +591,9 @@ export function Navbar() {
 
             {/* Primary Action Buttons */}
             <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900">
-              {isAuthenticated ? (
+              {loading ? (
+                <div className="w-full h-10 bg-zinc-200 dark:bg-zinc-800 animate-pulse rounded-lg" />
+              ) : isAuthenticated ? (
                 <Button onClick={handleLogout} variant="destructive" size="default" className="w-full text-white rounded-lg text-sm h-10">
                   <LogOut className="h-4 w-4 mr-2" /> Logout
                 </Button>
@@ -539,17 +609,30 @@ export function Navbar() {
             </div>
 
             {/* Shortcuts Footer */}
-            <div className="text-center space-y-2 pt-1">
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  window.dispatchEvent(new CustomEvent("learnova:open-shortcuts"));
-                }}
-                className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-blue-600 transition-colors text-xs"
-              >
-                <Keyboard className="h-3.5 w-3.5" />
-                <span>Keyboard Shortcuts</span>
-              </button>
+            <div className="text-center space-y-2 pt-1 flex flex-col items-center">
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    window.dispatchEvent(new CustomEvent("learnova:open-search"));
+                  }}
+                  className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-blue-600 transition-colors text-xs"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                  <span>Search</span>
+                </button>
+                <span className="text-zinc-600 dark:text-zinc-800">|</span>
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    window.dispatchEvent(new CustomEvent("learnova:open-shortcuts"));
+                  }}
+                  className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-blue-600 transition-colors text-xs"
+                >
+                  <Keyboard className="h-3.5 w-3.5" />
+                  <span>Shortcuts</span>
+                </button>
+              </div>
               <p className="text-zinc-400/50 text-[10px]">© {new Date().getFullYear()} Learnova.</p>
             </div>
 
