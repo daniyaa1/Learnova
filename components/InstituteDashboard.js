@@ -40,8 +40,10 @@ import {
   Globe,
   Calendar as CalendarIcon,
   User,
-  LogOut,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
+import ExportDropdown from "@/components/ui/ExportDropdown";
+import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 import { Navbar } from "./Navbar";
 import dynamic from "next/dynamic";
 import ChartSkeleton from "@/components/ui/ChartSkeleton";
@@ -64,6 +66,44 @@ const InstituteDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = (format) => {
+    setIsExporting(true);
+    setTimeout(() => {
+      try {
+        const exportData = attendanceRequests.map(req => ({
+          Date: selectedDate,
+          'Student Name': req.student,
+          'Roll No': req.rollNo,
+          'Class': req.class,
+          'Status': req.status,
+        }));
+        
+        const filename = `institute_attendance_requests_${selectedDate}`;
+        
+        if (format === 'csv') {
+          exportToCSV(exportData, filename);
+        } else {
+          const columns = [
+            { header: 'Date', dataKey: 'Date' },
+            { header: 'Student', dataKey: 'Student Name' },
+            { header: 'Roll No', dataKey: 'Roll No' },
+            { header: 'Class', dataKey: 'Class' },
+            { header: 'Status', dataKey: 'Status' }
+          ];
+          exportToPDF(exportData, columns, `Institute Attendance Requests - ${selectedDate}`, filename);
+        }
+        toast.success(`Successfully exported as ${format.toUpperCase()}`);
+      } catch (err) {
+        console.error("Export failed:", err);
+        toast.error("Failed to export report");
+      } finally {
+        setIsExporting(false);
+      }
+    }, 500);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setInitialLoading(false), 1200);
@@ -122,9 +162,10 @@ const InstituteDashboard = () => {
           if (data.teachers) setTeachers(data.teachers);
           if (data.attendanceRequests) setAttendanceRequests(data.attendanceRequests);
         } else {
-          console.error("Failed to fetch institute stats:", res.status);
+          setError("Failed to fetch institute data. Please try again.");
         }
       } catch (err) {
+        setError("Network error. Please check your connection and try again.");
         console.error("Error fetching institute stats:", err);
       } finally {
         setLoading(false);
@@ -291,6 +332,7 @@ const InstituteDashboard = () => {
 
             {/* Notifications */}
             <button
+              aria-label="Notifications"
               className="relative p-2.5 bg-gray-800/60 hover:bg-gray-700/60 
                              rounded-xl border border-gray-600/40 transition-colors shadow-sm"
             >
@@ -386,15 +428,19 @@ const InstituteDashboard = () => {
             </div>
           </button>
 
-          <button className="group bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 rounded-xl p-4 transition-all duration-500 ease-in-out hover:scale-102">
-            <div className="flex items-center space-x-3">
+          <ExportDropdown
+            onExport={handleExport}
+            isExporting={isExporting}
+            className="group w-full bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 rounded-xl p-4 transition-all duration-500 ease-in-out hover:scale-102 flex justify-start items-center"
+          >
+            <div className="flex items-center space-x-3 text-left">
               <Download className="w-5 h-5 text-green-400 group-hover:text-green-300" />
-              <div className="text-left">
+              <div>
                 <div className="font-medium text-green-300">Export Reports</div>
                 <div className="text-sm text-gray-400">CSV/PDF formats</div>
               </div>
             </div>
-          </button>
+          </ExportDropdown>
 
           <button
             onClick={() => setActiveTab("settings")}
@@ -560,13 +606,13 @@ const InstituteDashboard = () => {
                   <BookOpen className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex space-x-2">
-                  <button className="text-blue-400 hover:text-blue-300 p-2 bg-blue-500/20 rounded-lg border border-blue-500/30 transition-colors">
+                  <button aria-label="View class details" className="text-blue-400 hover:text-blue-300 p-2 bg-blue-500/20 rounded-lg border border-blue-500/30 transition-colors">
                     <Eye className="w-4 h-4" />
                   </button>
-                  <button className="text-green-400 hover:text-green-300 p-2 bg-green-500/20 rounded-lg border border-green-500/30 transition-colors">
+                  <button aria-label="Edit class" className="text-green-400 hover:text-green-300 p-2 bg-green-500/20 rounded-lg border border-green-500/30 transition-colors">
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button className="text-red-400 hover:text-red-300 p-2 bg-red-500/20 rounded-lg border border-red-500/30 transition-colors">
+                  <button aria-label="Delete class" className="text-red-400 hover:text-red-300 p-2 bg-red-500/20 rounded-lg border border-red-500/30 transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -677,7 +723,7 @@ const InstituteDashboard = () => {
               <button className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 px-3 py-2 rounded-xl transition-colors text-sm font-medium">
                 View Details
               </button>
-              <button className="bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 border border-gray-500/30 px-3 py-2 rounded-xl transition-colors">
+              <button aria-label="Edit teacher" className="bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 border border-gray-500/30 px-3 py-2 rounded-xl transition-colors">
                 <Edit className="w-4 h-4" />
               </button>
             </div>
@@ -699,13 +745,12 @@ const InstituteDashboard = () => {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-xl"
           />
-          <button
-            disabled={isLoading}
+          <ExportDropdown
+            onExport={handleExport}
+            isExporting={isExporting}
+            label="Export"
             className="bg-gradient-to-r from-green-600 to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl flex items-center shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:brightness-110"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </button>
+          />
         </div>
       </div>
 
@@ -962,6 +1007,30 @@ const InstituteDashboard = () => {
 
   if (initialLoading) {
     return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="fixed top-0 left-0 w-full z-50 shadow-xl border-b border-white/10 bg-gradient-to-r from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-xl">
+          <Navbar />
+        </div>
+        <div className="text-center pt-20 px-4">
+          <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-10 h-10 text-red-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105"
+          >
+            <RefreshCw className="w-4 h-4 mr-2 inline" />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

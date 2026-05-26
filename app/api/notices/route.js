@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { connectDb } from "@/lib/mongodb";
-import { requireAuth } from "@/lib/rbac";
-import { withErrorHandler } from "@/lib/error-handler";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { requireRole } from "@/lib/rbac";
+import { withErrorHandler, parseJSON } from "@/lib/error-handler";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const noticeSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -17,35 +18,28 @@ const noticeSchema = z.object({
 });
 
 async function publishNotice(request) {
-  const decodedToken = await requireAuth(request);
-  
-  // Basic RBAC: Only teachers/admins can publish notices
   const allowedRoles = ["teacher", "admin", "staff"];
-  // Note: the middleware / RBAC logic might already assign custom claims, 
-  // but we enforce an explicit check here if needed.
-  if (!allowedRoles.includes(decodedToken.role || "teacher")) {
-    return NextResponse.json({ error: "Forbidden: Only authorized staff can publish notices" }, { status: 403 });
-  }
+  const { payload: decodedToken, profile } = await requireRole(request, allowedRoles);
 
-  const body = await request.json();
+  const body = await parseJSON(request, 1024 * 50);
   const validData = noticeSchema.parse(body);
 
-  const db = await connectDb();
-  
   const newNotice = {
     ...validData,
     author: decodedToken.name || decodedToken.email.split("@")[0],
     authorId: decodedToken.uid,
-    authorRole: decodedToken.role || "teacher",
+    authorRole: profile.role,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
-  const result = await db.collection("notices").insertOne(newNotice);
+  const result = await adminDb
+    .collection("notices")
+    .add(newNotice);
 
   return NextResponse.json({
     success: true,
-    notice: { id: result.insertedId, ...newNotice }
+    notice: { id: result.id, ...newNotice }
   });
 }
 
